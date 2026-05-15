@@ -11,7 +11,8 @@ How it fits together:
   - *adafruit-circuitpython-bme280* speaks the BME280 register protocol on the I2C bus.
   - Wiring: Pi SDA/SCL to breakout SDA/SCL, 3.3 V and GND (not 5 V for typical Adafruit boards).
 
-Run (example): activate your venv, ``cd ~``, then ``python3 ~/scripts/single-read/read_bme280.py``.
+Run (example): activate your venv, ``cd ~``, then
+``python3 ~/Temp-Humidity-Project/scripts/single-read/read_bme280.py``.
 """
 
 from __future__ import annotations
@@ -78,7 +79,7 @@ def main() -> int:
         else:
             print(
                 "Missing dependency. On the Pi, in your venv:\n"
-                "  cd ~/scripts/single-read\n"
+                "  cd ~/Temp-Humidity-Project/scripts/single-read\n"
                 "  pip install -r requirements-bme280.txt\n",
                 file=sys.stderr,
             )

@@ -13,7 +13,7 @@ Prerequisites match ``scripts/single-read/PI_BME280_SETUP.txt``: I2C, ``i2c`` + 
 1) Dependencies (Pi, reuse existing venv from single-read)
 ------------------------------------------------------------------------------
    source ~/bme280-venv/bin/activate
-   pip install -r ~/scripts/linux-device-read/requirements.txt
+   pip install -r ~/Temp-Humidity-Project/scripts/linux-device-read/requirements.txt
    # If already installed from single-read, this is a no-op.
 
 ------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ Prerequisites match ``scripts/single-read/PI_BME280_SETUP.txt``: I2C, ``i2c`` + 
 ------------------------------------------------------------------------------
    source ~/bme280-venv/bin/activate
    mkdir -p /tmp/bme280-test
-   python3 ~/scripts/linux-device-read/bme280_daemon.py \
+   python3 ~/Temp-Humidity-Project/scripts/linux-device-read/bme280_daemon.py \
      --output /tmp/bme280-test/readings.json \
      --interval 2
 
@@ -32,7 +32,7 @@ Prerequisites match ``scripts/single-read/PI_BME280_SETUP.txt``: I2C, ``i2c`` + 
 ------------------------------------------------------------------------------
 3) systemd service (boot-time integration)
 ------------------------------------------------------------------------------
-   sudo cp ~/scripts/linux-device-read/bme280-json.service /etc/systemd/system/
+   sudo cp ~/Temp-Humidity-Project/scripts/linux-device-read/bme280-json.service /etc/systemd/system/
    sudo systemctl daemon-reload
    sudo systemctl enable --now bme280-json.service
 
@@ -48,7 +48,7 @@ Prerequisites match ``scripts/single-read/PI_BME280_SETUP.txt``: I2C, ``i2c`` + 
      sudo systemctl edit bme280-json.service
      # [Service]
      # ExecStart=
-     # ExecStart=/home/robot/bme280-venv/bin/python /home/robot/scripts/linux-device-read/bme280_daemon.py --interval 5 --address 0x76
+     # ExecStart=/home/robot/bme280-venv/bin/python /home/robot/Temp-Humidity-Project/scripts/linux-device-read/bme280_daemon.py --interval 5 --address 0x76
 
 ------------------------------------------------------------------------------
 4) JSON shape
@@ -59,7 +59,10 @@ Prerequisites match ``scripts/single-read/PI_BME280_SETUP.txt``: I2C, ``i2c`` + 
    Failure (``ok``: false): ``error`` string; consumers should check ``ok`` first.
 
 ------------------------------------------------------------------------------
-5) Copy from Windows
+5) Get code on the Pi (git — preferred)
 ------------------------------------------------------------------------------
-   Same as single-read: ``scp -r`` the whole ``scripts`` tree so
-   ``~/scripts/linux-device-read`` exists on the Pi.
+   cd ~
+   git clone https://github.com/Birdup0223/Temp-Humidity-Project.git
+   # Repo path: ~/Temp-Humidity-Project/scripts/linux-device-read/
+
+   If you cloned elsewhere, edit ``ExecStart=`` in ``bme280-json.service`` before ``systemctl enable``.

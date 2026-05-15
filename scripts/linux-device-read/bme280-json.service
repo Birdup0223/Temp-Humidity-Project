@@ -1,5 +1,5 @@
-# Install on the Pi:
-#   sudo cp ~/scripts/linux-device-read/bme280-json.service /etc/systemd/system/
+# Install on the Pi (default clone: ~/Temp-Humidity-Project):
+#   sudo cp ~/Temp-Humidity-Project/scripts/linux-device-read/bme280-json.service /etc/systemd/system/
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now bme280-json.service
 #
@@ -17,7 +17,7 @@ SupplementaryGroups=i2c gpio
 StateDirectory=bme280
 Environment=BME280_JSON_PATH=/var/lib/bme280/readings.json
 WorkingDirectory=/home/robot
-ExecStart=/home/robot/bme280-venv/bin/python /home/robot/scripts/linux-device-read/bme280_daemon.py --interval 2
+ExecStart=/home/robot/bme280-venv/bin/python /home/robot/Temp-Humidity-Project/scripts/linux-device-read/bme280_daemon.py --interval 2
 Restart=on-failure
 RestartSec=5
 

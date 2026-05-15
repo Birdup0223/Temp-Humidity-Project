@@ -1,8 +1,8 @@
 BME280 on Raspberry Pi 5 + Ubuntu Desktop — setup and run (verified path)
 ==========================================================================
 This guide belongs with the **single-read** console sample under ``scripts/single-read/``
-(read_bme280.py + requirements-bme280.txt). Copy the whole ``scripts`` tree to the Pi so
-that path exists.
+(read_bme280.py + requirements-bme280.txt). Prefer **git clone** of the repo on the Pi so
+paths match ``~/Temp-Humidity-Project/scripts/single-read/`` (see README.md at repo root).
 
 Pi credentials for this project: see ../../pi-connection.local.txt (robot @ 192.168.1.96).
 
@@ -49,20 +49,17 @@ Adafruit BME280 breakout over I2C, user `robot`.
 
 
 ------------------------------------------------------------------------------
-5) Copy `scripts` from Windows to the Pi — MUST run on Windows, not on the Pi
+5) Get the repo onto the Pi
 ------------------------------------------------------------------------------
-   On Linux/macOS, `scp` treats `C:\...` as a hostname and fails with
-   "Could not resolve hostname c". The source path exists only on your PC.
+   Recommended — from the Pi (or any machine with git):
 
-   From Windows PowerShell or CMD (adjust the path if your project folder moved):
+   cd ~
+   git clone https://github.com/Birdup0223/Temp-Humidity-Project.git
 
-   scp -r "C:\Users\James\OneDrive\ARCHIVE\Desktop\Projects\Temp-humidity-project\scripts" robot@192.168.1.96:~/
+   Paths below use ``~/Temp-Humidity-Project/scripts/single-read/``.
 
-   On the Pi you should then have e.g. ~/scripts/single-read/read_bme280.py and
-   ~/scripts/single-read/requirements-bme280.txt.
-
-   Alternative: WinSCP / FileZilla SFTP upload of the `scripts` folder to /home/robot/scripts
-   (preserve the ``single-read`` subdirectory).
+   Alternative — copy ``scripts`` from Windows (``scp`` must run **on Windows**, not on the Pi;
+   ``C:\...`` is not a valid path on Linux). Or use WinSCP to upload into ``/home/robot/``.
 
 
 ------------------------------------------------------------------------------
@@ -74,7 +71,7 @@ Adafruit BME280 breakout over I2C, user `robot`.
    If an earlier venv failed halfway, remove it before recreating:
    rm -rf ~/bme280-venv
 
-   cd ~/scripts/single-read
+   cd ~/Temp-Humidity-Project/scripts/single-read
    python3 -m venv ~/bme280-venv
    source ~/bme280-venv/bin/activate
    # Prompt should show (bme280-venv). Always use this venv's pip/python.
@@ -99,18 +96,18 @@ Adafruit BME280 breakout over I2C, user `robot`.
 7) Run once — working invocation (avoids lgpio .lgd-nfy* cwd issues)
 ------------------------------------------------------------------------------
    The lgpio library creates hidden `.lgd-nfy*` files in the process current
-   directory when Blinka imports `board`. Running from ~/scripts/single-read failed with
+   directory when Blinka imports `board`. Running from the repo subdir failed with
    permission/path errors for some setups; running from home works reliably.
 
    source ~/bme280-venv/bin/activate
    cd ~
-   python3 ~/scripts/single-read/read_bme280.py
+   python3 ~/Temp-Humidity-Project/scripts/single-read/read_bme280.py
 
    If no device at default address:
-   python3 ~/scripts/single-read/read_bme280.py --address 0x76
+   python3 ~/Temp-Humidity-Project/scripts/single-read/read_bme280.py --address 0x76
 
    The copy of read_bme280.py in this repo also chdirs to ~ before importing
-   board; after syncing that file to the Pi, running from ~/scripts/single-read is OK too.
+   board; after ``git pull``, running from ``~/Temp-Humidity-Project/scripts/single-read`` is OK too.
 
 
 ------------------------------------------------------------------------------
@@ -118,7 +115,7 @@ Adafruit BME280 breakout over I2C, user `robot`.
 ------------------------------------------------------------------------------
    source ~/bme280-venv/bin/activate
    cd ~
-   python3 ~/scripts/single-read/read_bme280.py --loop
+   python3 ~/Temp-Humidity-Project/scripts/single-read/read_bme280.py --loop
 
 
 ------------------------------------------------------------------------------
