@@ -1,0 +1,23 @@
+# Machine-local (LAN IP / username); copy from example and do not commit.
+pi-connection.local.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.venv/
+venv/
+bme280-venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

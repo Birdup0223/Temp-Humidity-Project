@@ -1,0 +1,65 @@
+linux-device-read — BME280 JSON “device” for the OS
+===================================================
+Goal: a long-running Python daemon writes **atomic JSON** so anything on the Pi can read
+sensor state without importing Blinka (``cat``, ``jq``, scripts, monitoring).
+
+Default output path: ``/var/lib/bme280/readings.json``
+(systemd ``StateDirectory=bme280`` creates ``/var/lib/bme280`` owned by the service user.)
+
+Prerequisites match ``scripts/single-read/PI_BME280_SETUP.txt``: I2C, ``i2c`` + ``gpio`` groups,
+``~/bme280-venv`` with the same Adafruit stack + ``liblgpio1`` on Pi 5.
+
+------------------------------------------------------------------------------
+1) Dependencies (Pi, reuse existing venv from single-read)
+------------------------------------------------------------------------------
+   source ~/bme280-venv/bin/activate
+   pip install -r ~/scripts/linux-device-read/requirements.txt
+   # If already installed from single-read, this is a no-op.
+
+------------------------------------------------------------------------------
+2) Manual test (foreground)
+------------------------------------------------------------------------------
+   source ~/bme280-venv/bin/activate
+   mkdir -p /tmp/bme280-test
+   python3 ~/scripts/linux-device-read/bme280_daemon.py \
+     --output /tmp/bme280-test/readings.json \
+     --interval 2
+
+   In another shell: ``cat /tmp/bme280-test/readings.json``
+
+   Wrong I2C address: add ``--address 0x76``. Stop with Ctrl+C.
+
+------------------------------------------------------------------------------
+3) systemd service (boot-time integration)
+------------------------------------------------------------------------------
+   sudo cp ~/scripts/linux-device-read/bme280-json.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now bme280-json.service
+
+   Status / logs:
+     systemctl status bme280-json.service
+     journalctl -u bme280-json.service -f
+
+   Read published JSON:
+     cat /var/lib/bme280/readings.json
+     jq . /var/lib/bme280/readings.json
+
+   Override poll interval or address (example drop-in):
+     sudo systemctl edit bme280-json.service
+     # [Service]
+     # ExecStart=
+     # ExecStart=/home/robot/bme280-venv/bin/python /home/robot/scripts/linux-device-read/bme280_daemon.py --interval 5 --address 0x76
+
+------------------------------------------------------------------------------
+4) JSON shape
+------------------------------------------------------------------------------
+   Success (``ok``: true): ``timestamp_utc``, ``i2c_address``, ``temperature_c``,
+   ``relative_humidity_percent``, ``pressure_hpa``, ``approximate_altitude_m``.
+
+   Failure (``ok``: false): ``error`` string; consumers should check ``ok`` first.
+
+------------------------------------------------------------------------------
+5) Copy from Windows
+------------------------------------------------------------------------------
+   Same as single-read: ``scp -r`` the whole ``scripts`` tree so
+   ``~/scripts/linux-device-read`` exists on the Pi.

@@ -1,0 +1,132 @@
+BME280 on Raspberry Pi 5 + Ubuntu Desktop — setup and run (verified path)
+==========================================================================
+This guide belongs with the **single-read** console sample under ``scripts/single-read/``
+(read_bme280.py + requirements-bme280.txt). Copy the whole ``scripts`` tree to the Pi so
+that path exists.
+
+Pi credentials for this project: see ../../pi-connection.local.txt (robot @ 192.168.1.96).
+
+Environment that matched the steps below: Ubuntu 24.04 (noble) on arm64, Python 3.12,
+Adafruit BME280 breakout over I2C, user `robot`.
+
+------------------------------------------------------------------------------
+1) From Windows, SSH into the Pi
+------------------------------------------------------------------------------
+   ssh robot@192.168.1.96
+
+
+------------------------------------------------------------------------------
+2) Enable I2C and Python venv support (on the Pi)
+------------------------------------------------------------------------------
+   sudo apt update
+   sudo apt install -y i2c-tools python3-pip python3-venv python3-full
+
+   Ubuntu 24.04+ ships Python 3.12; `python3 -m venv` needs ensurepip from the
+   matching package or venv creation fails with "ensurepip is not available":
+   sudo apt install -y python3.12-venv
+   # If `python3 --version` is not 3.12, install python3.XY-venv for that X.Y.
+
+   If `i2cdetect -l` shows no buses, enable I2C in firmware, then reboot:
+   sudo nano /boot/firmware/config.txt
+   Ensure this line exists (uncommented):
+     dtparam=i2c_arm=on
+   sudo reboot
+
+
+------------------------------------------------------------------------------
+3) Let your user use I2C (and GPIO if needed) without sudo
+------------------------------------------------------------------------------
+   sudo usermod -aG i2c robot
+   sudo usermod -aG gpio robot
+   Log out of SSH and back in (or reboot) so group membership applies.
+
+
+------------------------------------------------------------------------------
+4) Check wiring / I2C address (on the Pi)
+------------------------------------------------------------------------------
+   i2cdetect -y 1
+   You should see 76 or 77 in the grid if the BME280 is connected.
+
+
+------------------------------------------------------------------------------
+5) Copy `scripts` from Windows to the Pi — MUST run on Windows, not on the Pi
+------------------------------------------------------------------------------
+   On Linux/macOS, `scp` treats `C:\...` as a hostname and fails with
+   "Could not resolve hostname c". The source path exists only on your PC.
+
+   From Windows PowerShell or CMD (adjust the path if your project folder moved):
+
+   scp -r "C:\Users\James\OneDrive\ARCHIVE\Desktop\Projects\Temp-humidity-project\scripts" robot@192.168.1.96:~/
+
+   On the Pi you should then have e.g. ~/scripts/single-read/read_bme280.py and
+   ~/scripts/single-read/requirements-bme280.txt.
+
+   Alternative: WinSCP / FileZilla SFTP upload of the `scripts` folder to /home/robot/scripts
+   (preserve the ``single-read`` subdirectory).
+
+
+------------------------------------------------------------------------------
+6) On the Pi: virtualenv and Python deps
+------------------------------------------------------------------------------
+   Why a venv: system Python on Ubuntu is PEP 668 "externally managed"; plain
+   `pip install` without a venv errors with externally-managed-environment.
+
+   If an earlier venv failed halfway, remove it before recreating:
+   rm -rf ~/bme280-venv
+
+   cd ~/scripts/single-read
+   python3 -m venv ~/bme280-venv
+   source ~/bme280-venv/bin/activate
+   # Prompt should show (bme280-venv). Always use this venv's pip/python.
+
+   pip install --upgrade pip
+
+   Raspberry Pi 5 + Blinka: install system liblgpio first, then Python packages.
+   sudo apt install -y liblgpio1
+
+   pip install -r requirements-bme280.txt
+   # requirements-bme280.txt includes adafruit-blinka, adafruit-circuitpython-bme280,
+   # and lgpio. If anything still reports "No module named 'lgpio'":
+   pip install lgpio
+
+   Fallback if pip cannot build/use lgpio: sudo apt install -y python3-lgpio
+   then recreate the venv with site-packages visible:
+   rm -rf ~/bme280-venv && python3 -m venv --system-site-packages ~/bme280-venv
+   ... activate, pip install -r requirements-bme280.txt again.
+
+
+------------------------------------------------------------------------------
+7) Run once — working invocation (avoids lgpio .lgd-nfy* cwd issues)
+------------------------------------------------------------------------------
+   The lgpio library creates hidden `.lgd-nfy*` files in the process current
+   directory when Blinka imports `board`. Running from ~/scripts/single-read failed with
+   permission/path errors for some setups; running from home works reliably.
+
+   source ~/bme280-venv/bin/activate
+   cd ~
+   python3 ~/scripts/single-read/read_bme280.py
+
+   If no device at default address:
+   python3 ~/scripts/single-read/read_bme280.py --address 0x76
+
+   The copy of read_bme280.py in this repo also chdirs to ~ before importing
+   board; after syncing that file to the Pi, running from ~/scripts/single-read is OK too.
+
+
+------------------------------------------------------------------------------
+8) Continuous readings
+------------------------------------------------------------------------------
+   source ~/bme280-venv/bin/activate
+   cd ~
+   python3 ~/scripts/single-read/read_bme280.py --loop
+
+
+------------------------------------------------------------------------------
+Wiring (Adafruit BME280 breakout, I2C)
+------------------------------------------------------------------------------
+Pi 3.3V  -> VIN (or 3V)
+Pi GND   -> GND
+Pi GPIO3 (SCL, pin 5) -> SCL
+Pi GPIO2 (SDA, pin 3) -> SDA
+
+Use 3.3V, not 5V, for this breakout.

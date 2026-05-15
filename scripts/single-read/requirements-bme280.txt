@@ -1,0 +1,4 @@
+adafruit-blinka>=8.20.0
+adafruit-circuitpython-bme280>=2.6.0
+# Pi 5: Blinka uses lgpio for I2C/GPIO (not bundled with blinka).
+lgpio>=0.2.0.0

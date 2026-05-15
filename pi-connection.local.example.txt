@@ -1,0 +1,4 @@
+# Copy to pi-connection.local.txt and fill in (that file is gitignored).
+PI_USER=robot
+PI_HOST=192.168.1.96
+# Example: ssh ${PI_USER}@${PI_HOST}
