@@ -1,9 +1,13 @@
-# Install on the Pi (default clone: ~/Temp-Humidity-Project):
+# Install on the Pi (see NEW_PI_SETUP.md in repo root):
 #   sudo cp ~/Temp-Humidity-Project/scripts/linux-device-read/bme280-json.service /etc/systemd/system/
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now bme280-json.service
 #
-# Adjust User= and paths if your account name or layout differs from ``robot``.
+# If your Linux user is not "robot", change User=, Group=, WorkingDirectory=, and
+# /home/robot paths in ExecStart= before copying to /etc/systemd/system/.
+#
+# Do NOT add SupplementaryGroups=i2c gpio unless both groups exist (getent group i2c gpio).
+# Missing "gpio" on Ubuntu causes systemd exit status 216/GROUP.
 
 [Unit]
 Description=BME280 readings as JSON (linux-device-read)
@@ -13,7 +17,8 @@ After=network.target
 Type=simple
 User=robot
 Group=robot
-SupplementaryGroups=i2c gpio
+# Do not list SupplementaryGroups= unless those groups exist (getent group i2c gpio).
+# User=robot already gets groups from: sudo usermod -aG i2c robot
 StateDirectory=bme280
 Environment=BME280_JSON_PATH=/var/lib/bme280/readings.json
 WorkingDirectory=/home/robot

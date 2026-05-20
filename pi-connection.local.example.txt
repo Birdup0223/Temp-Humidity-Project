@@ -2,3 +2,7 @@
 PI_USER=robot
 PI_HOST=192.168.1.96
 # Example: ssh ${PI_USER}@${PI_HOST}
+#
+# On a new Pi, also set User=/home paths in:
+#   scripts/linux-device-read/bme280-json.service
+# if PI_USER is not "robot". See NEW_PI_SETUP.md.

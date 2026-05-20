@@ -3,48 +3,69 @@ linux-device-read — BME280 JSON “device” for the OS
 Goal: a long-running Python daemon writes **atomic JSON** so anything on the Pi can read
 sensor state without importing Blinka (``cat``, ``jq``, scripts, monitoring).
 
-Default output path: ``/var/lib/bme280/readings.json``
-(systemd ``StateDirectory=bme280`` creates ``/var/lib/bme280`` owned by the service user.)
+Production output: ``/var/lib/bme280/readings.json``
+(systemd ``StateDirectory=bme280`` creates ``/var/lib/bme280`` for the service user.)
 
-Prerequisites match ``scripts/single-read/PI_BME280_SETUP.txt``: I2C, ``i2c`` + ``gpio`` groups,
-``~/bme280-venv`` with the same Adafruit stack + ``liblgpio1`` on Pi 5.
+**New Pi end-to-end:** see ``NEW_PI_SETUP.md`` at the repo root (replication checklist).
+
+Prerequisites: I2C enabled, user in ``i2c`` group, ``~/bme280-venv`` with Blinka stack +
+``liblgpio1`` on Pi 5 (same as ``scripts/single-read/PI_BME280_SETUP.txt``).
 
 ------------------------------------------------------------------------------
-1) Dependencies (Pi, reuse existing venv from single-read)
+1) Dependencies (reuse venv from single-read)
 ------------------------------------------------------------------------------
    source ~/bme280-venv/bin/activate
    pip install -r ~/Temp-Humidity-Project/scripts/linux-device-read/requirements.txt
-   # If already installed from single-read, this is a no-op.
 
 ------------------------------------------------------------------------------
-2) Manual test (foreground)
+2) Manual test (before systemd)
 ------------------------------------------------------------------------------
+   Note: ``/tmp/bme280-test`` is under **system** ``/tmp``, not your home folder.
+
+   Terminal A:
    source ~/bme280-venv/bin/activate
    mkdir -p /tmp/bme280-test
+   cd ~
    python3 ~/Temp-Humidity-Project/scripts/linux-device-read/bme280_daemon.py \
      --output /tmp/bme280-test/readings.json \
      --interval 2
 
-   In another shell: ``cat /tmp/bme280-test/readings.json``
+   Terminal B:
+   cat /tmp/bme280-test/readings.json
 
-   Wrong I2C address: add ``--address 0x76``. Stop with Ctrl+C.
+   Wrong I2C address: add ``--address 0x76``. Stop Terminal A with Ctrl+C.
 
 ------------------------------------------------------------------------------
 3) systemd service (boot-time integration)
 ------------------------------------------------------------------------------
+   **If your Linux user is not ``robot``**, edit paths in ``bme280-json.service`` first
+   (``User=``, ``Group=``, ``WorkingDirectory=``, ``ExecStart=``).
+
    sudo cp ~/Temp-Humidity-Project/scripts/linux-device-read/bme280-json.service /etc/systemd/system/
    sudo systemctl daemon-reload
    sudo systemctl enable --now bme280-json.service
+   systemctl status bme280-json.service
 
-   Status / logs:
-     systemctl status bme280-json.service
-     journalctl -u bme280-json.service -f
+   Expect: ``Active: active (running)``.
 
    Read published JSON:
      cat /var/lib/bme280/readings.json
      jq . /var/lib/bme280/readings.json
 
-   Override poll interval or address (example drop-in):
+   Logs:
+     journalctl -u bme280-json.service -f
+
+   **Troubleshooting ``216/GROUP``**
+   The shipped unit does **not** use ``SupplementaryGroups=``. If an older copy on the Pi
+   still has ``SupplementaryGroups=i2c gpio``, remove that line (Ubuntu often has no ``gpio`` group):
+
+     sudo sed -i '/^SupplementaryGroups=/d' /etc/systemd/system/bme280-json.service
+     sudo systemctl daemon-reload
+     sudo systemctl restart bme280-json.service
+
+   Ensure the service user is in ``i2c``: ``sudo usermod -aG i2c robot`` (then re-login once).
+
+   Change poll interval or I2C address:
      sudo systemctl edit bme280-json.service
      # [Service]
      # ExecStart=
@@ -59,10 +80,8 @@ Prerequisites match ``scripts/single-read/PI_BME280_SETUP.txt``: I2C, ``i2c`` + 
    Failure (``ok``: false): ``error`` string; consumers should check ``ok`` first.
 
 ------------------------------------------------------------------------------
-5) Get code on the Pi (git — preferred)
+5) Get / update code on the Pi
 ------------------------------------------------------------------------------
    cd ~
    git clone https://github.com/Birdup0223/Temp-Humidity-Project.git
-   # Repo path: ~/Temp-Humidity-Project/scripts/linux-device-read/
-
-   If you cloned elsewhere, edit ``ExecStart=`` in ``bme280-json.service`` before ``systemctl enable``.
+   # Updates: cd ~/Temp-Humidity-Project && git pull

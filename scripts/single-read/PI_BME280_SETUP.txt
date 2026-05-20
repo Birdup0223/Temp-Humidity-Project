@@ -1,10 +1,12 @@
 BME280 on Raspberry Pi 5 + Ubuntu Desktop — setup and run (verified path)
 ==========================================================================
 This guide belongs with the **single-read** console sample under ``scripts/single-read/``
-(read_bme280.py + requirements-bme280.txt). Prefer **git clone** of the repo on the Pi so
-paths match ``~/Temp-Humidity-Project/scripts/single-read/`` (see README.md at repo root).
+(read_bme280.py + requirements-bme280.txt).
 
-Pi credentials for this project: see ../../pi-connection.local.txt (robot @ 192.168.1.96).
+**New Pi from scratch:** use ``NEW_PI_SETUP.md`` at the repo root (full replication checklist).
+
+Pi SSH notes (optional, not in git): copy ``pi-connection.local.example.txt`` to
+``pi-connection.local.txt`` at repo root.
 
 Environment that matched the steps below: Ubuntu 24.04 (noble) on arm64, Python 3.12,
 Adafruit BME280 breakout over I2C, user `robot`.
@@ -34,10 +36,10 @@ Adafruit BME280 breakout over I2C, user `robot`.
 
 
 ------------------------------------------------------------------------------
-3) Let your user use I2C (and GPIO if needed) without sudo
+3) Let your user use I2C without sudo
 ------------------------------------------------------------------------------
-   sudo usermod -aG i2c robot
-   sudo usermod -aG gpio robot
+   sudo usermod -aG i2c $USER
+   # Optional only if the group exists: getent group gpio && sudo usermod -aG gpio $USER
    Log out of SSH and back in (or reboot) so group membership applies.
 
 
